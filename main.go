@@ -8,6 +8,9 @@ import (
 )
 
 func main() {
+
+	core.LoadConfig()
+
 	_, err := core.ListCerts()
 	if err != nil {
 		log.Fatalf("failed to list certs: %v", err)
@@ -38,7 +41,7 @@ func main() {
 
 	app.All("*", core.Handler)
 
-	log.Infof("Listening on port 443 with cert %s", core.SelectedCert)
+	log.Infof("Listening on port 443 with cert %s and upstream %s", core.SelectedCert, core.Config.UpstreamURL)
 
 	app.ListenTLSWithCertificate(":443", core.LoadCert(core.SelectedCert))
 }

@@ -3,10 +3,7 @@ package core
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/proxy"
-)
-
-const (
-	hybridURL = "http://localhost:8787"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -23,7 +20,9 @@ func Handler(c *fiber.Ctx) error {
 
 	c.Request().Header.Set("X-Telemachus-Identifier", Identifier)
 
-	if err := proxy.Do(c, hybridURL); err != nil {
+	UpstreamURL := viper.GetString("upstream_url")
+
+	if err := proxy.Do(c, UpstreamURL); err != nil {
 		return err
 	}
 	return nil
