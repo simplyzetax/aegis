@@ -22,6 +22,8 @@ func Handler(c *fiber.Ctx) error {
 
 	UpstreamURL := viper.GetString("upstream_url")
 
+	UpstreamURL = UpstreamURL + string(url.Path()) + "?" + string(url.QueryString())
+
 	if err := proxy.Do(c, UpstreamURL); err != nil {
 		return err
 	}
