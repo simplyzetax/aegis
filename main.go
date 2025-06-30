@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
-
+	"github.com/charmbracelet/log"
 	"github.com/gofiber/fiber/v2"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/simplyzetax/aegis/core"
 )
 
@@ -29,9 +29,16 @@ func main() {
 		DisableStartupMessage: true,
 	})
 
+	id, err := gonanoid.New()
+	if err != nil {
+		log.Fatalf("failed to generate identifier: %v", err)
+	}
+
+	core.Identifier = id
+
 	app.All("*", core.Handler)
 
-	println("Listening on port 443 with cert:", core.SelectedCert)
+	log.Infof("Listening on port 443 with cert %s", core.SelectedCert)
 
 	app.ListenTLSWithCertificate(":443", core.LoadCert(core.SelectedCert))
 }

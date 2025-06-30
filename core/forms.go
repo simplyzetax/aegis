@@ -1,10 +1,10 @@
 package core
 
 import (
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/log"
 )
 
 var SelectedCert string

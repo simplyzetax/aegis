@@ -9,10 +9,19 @@ const (
 	hybridURL = "http://localhost:8787"
 )
 
-func Handler(c *fiber.Ctx) error {
-	epicURL := c.Request().URI()
+var (
+	Identifier = ""
+)
 
-	c.Request().Header.Set("X-Epic-URL", epicURL.String())
+func Handler(c *fiber.Ctx) error {
+	url := c.Request().URI()
+	if string(url.Host()) != "localhost" {
+		c.Request().Header.Set("X-Epic-URL", url.String())
+	} else {
+		c.Request().Header.Set("X-Epic-URL", string(c.Request().Header.Peek("X-Epic-URL")))
+	}
+
+	c.Request().Header.Set("X-Telemachus-Identifier", Identifier)
 
 	if err := proxy.Do(c, hybridURL); err != nil {
 		return err
