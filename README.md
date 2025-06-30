@@ -18,7 +18,7 @@ Aegis is a simple, local HTTPS proxy written in Go. It's designed to expose a lo
 1.  **Clone the repository:**
 
     ```sh
-    git clone https://github.com/your-username/aegis.git
+    git clone https://github.com/simplyzetax/aegis.git
     cd aegis
     ```
 
@@ -41,8 +41,4 @@ Aegis will then start an HTTPS server on port `443`.
 
 ## Configuration
 
-Aegis proxies all incoming requests to a hardcoded upstream server.
-
-- **Upstream Server:** `http://localhost:8787`
-
-This can be changed by modifying the `hybridURL` constant in `core/proxy.go`.
+Aegis proxies all incoming requests to the `upstream_url` defined in config.jsob
