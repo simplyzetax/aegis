@@ -1,4 +1,4 @@
-package core
+package dns
 
 import (
 	"fmt"
@@ -12,23 +12,23 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// DNSManager handles system DNS configuration across platforms
-type DNSManager struct {
+// Manager handles system DNS configuration across platforms
+type Manager struct {
 	originalDNS map[string][]string // interface -> DNS servers
 	ourDNSPort  string              // the port our DNS server is using
 	platform    string
 }
 
-// NewDNSManager creates a new DNS manager instance
-func NewDNSManager() *DNSManager {
-	return &DNSManager{
+// NewManager creates a new DNS manager instance
+func NewManager() *Manager {
+	return &Manager{
 		originalDNS: make(map[string][]string),
 		platform:    runtime.GOOS,
 	}
 }
 
 // GetCurrentDNS retrieves current DNS settings for all active interfaces
-func (dm *DNSManager) GetCurrentDNS() error {
+func (dm *Manager) GetCurrentDNS() error {
 	switch dm.platform {
 	case "windows":
 		return dm.getCurrentDNSWindows()
@@ -40,7 +40,7 @@ func (dm *DNSManager) GetCurrentDNS() error {
 }
 
 // SetDNSToLocal configures system DNS to use our local DNS server
-func (dm *DNSManager) SetDNSToLocal(port string) error {
+func (dm *Manager) SetDNSToLocal(port string) error {
 	dm.ourDNSPort = port
 	localDNS := "127.0.0.1" // Only IP address, no port for DNS configuration
 
@@ -55,7 +55,7 @@ func (dm *DNSManager) SetDNSToLocal(port string) error {
 }
 
 // RestoreOriginalDNS restores the original DNS settings
-func (dm *DNSManager) RestoreOriginalDNS() error {
+func (dm *Manager) RestoreOriginalDNS() error {
 	log.Info("Restoring original DNS settings...")
 
 	switch dm.platform {
@@ -69,7 +69,7 @@ func (dm *DNSManager) RestoreOriginalDNS() error {
 }
 
 // Windows-specific implementations
-func (dm *DNSManager) getCurrentDNSWindows() error {
+func (dm *Manager) getCurrentDNSWindows() error {
 	cmd := exec.Command("netsh", "interface", "ipv4", "show", "dnsservers")
 	output, err := cmd.Output()
 	if err != nil {
@@ -99,7 +99,7 @@ func (dm *DNSManager) getCurrentDNSWindows() error {
 	return nil
 }
 
-func (dm *DNSManager) setDNSWindows(dnsServer string) error {
+func (dm *Manager) setDNSWindows(dnsServer string) error {
 	for interfaceName := range dm.originalDNS {
 		cmd := exec.Command("netsh", "interface", "ipv4", "set", "dnsservers", interfaceName, "static", dnsServer, "primary")
 		if err := cmd.Run(); err != nil {
@@ -111,7 +111,7 @@ func (dm *DNSManager) setDNSWindows(dnsServer string) error {
 	return nil
 }
 
-func (dm *DNSManager) restoreDNSWindows() error {
+func (dm *Manager) restoreDNSWindows() error {
 	for interfaceName, dnsServers := range dm.originalDNS {
 		if len(dnsServers) == 0 {
 			// Set to automatic
@@ -138,8 +138,8 @@ func (dm *DNSManager) restoreDNSWindows() error {
 	return nil
 }
 
-// macOS-specific implementations
-func (dm *DNSManager) getCurrentDNSMacOS() error {
+// macOS-specific implementations (keeping the same complex logic from the original)
+func (dm *Manager) getCurrentDNSMacOS() error {
 	// Get list of network services
 	cmd := exec.Command("networksetup", "-listallnetworkservices")
 	output, err := cmd.Output()
@@ -239,7 +239,7 @@ func (dm *DNSManager) getCurrentDNSMacOS() error {
 }
 
 // getCurrentDNSSystemResolver gets DNS from system resolver as fallback
-func (dm *DNSManager) getCurrentDNSSystemResolver() error {
+func (dm *Manager) getCurrentDNSSystemResolver() error {
 	// Check /etc/resolv.conf
 	content, err := os.ReadFile("/etc/resolv.conf")
 	if err != nil {
@@ -295,7 +295,7 @@ func (dm *DNSManager) getCurrentDNSSystemResolver() error {
 	return nil
 }
 
-func (dm *DNSManager) setDNSMacOS(dnsServer string) error {
+func (dm *Manager) setDNSMacOS(dnsServer string) error {
 	successCount := 0
 	for serviceName := range dm.originalDNS {
 		if serviceName == "system" || serviceName == "resolv.conf" {
@@ -328,7 +328,7 @@ func (dm *DNSManager) setDNSMacOS(dnsServer string) error {
 }
 
 // isNetworkServiceActive checks if a network service is active
-func (dm *DNSManager) isNetworkServiceActive(serviceName string) bool {
+func (dm *Manager) isNetworkServiceActive(serviceName string) bool {
 	// Check if the interface has a valid IP address (indicating it's active)
 	cmd := exec.Command("networksetup", "-getinfo", serviceName)
 	output, err := cmd.Output()
@@ -363,7 +363,7 @@ func (dm *DNSManager) isNetworkServiceActive(serviceName string) bool {
 	return err == nil
 }
 
-func (dm *DNSManager) restoreDNSMacOS() error {
+func (dm *Manager) restoreDNSMacOS() error {
 	for serviceName, dnsServers := range dm.originalDNS {
 		if serviceName == "system" || serviceName == "resolv.conf" {
 			// Skip these as they're fallback methods
@@ -395,12 +395,12 @@ func (dm *DNSManager) restoreDNSMacOS() error {
 }
 
 // GetOriginalDNS returns the original DNS settings
-func (dm *DNSManager) GetOriginalDNS() map[string][]string {
+func (dm *Manager) GetOriginalDNS() map[string][]string {
 	return dm.originalDNS
 }
 
 // SetupSignalHandlers sets up signal handlers for graceful cleanup
-func (dm *DNSManager) SetupSignalHandlers() {
+func (dm *Manager) SetupSignalHandlers() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -414,7 +414,7 @@ func (dm *DNSManager) SetupSignalHandlers() {
 
 // ResetAllDNSToAuto resets all network services to automatic (DHCP) DNS
 // This is useful when a previous run didn't clean up properly
-func (dm *DNSManager) ResetAllDNSToAuto() error {
+func (dm *Manager) ResetAllDNSToAuto() error {
 	log.Info("Resetting all network services to automatic DNS...")
 
 	// Get list of network services

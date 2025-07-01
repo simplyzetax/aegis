@@ -1,5 +1,21 @@
 {
-  "upstream_url": "http://localhost:8787",
+  "dns": {
+    "redirects": [
+      {
+        "domain": "*.ol.epicgames.com",
+        "target": "127.0.0.1",
+        "description": "Epic Games Online Services",
+        "enabled": true
+      }
+    ],
+    "upstream_dns": "1.1.1.1:53",
+    "port": "53",
+    "auto_manage_system": true
+  },
   "identifier": "dev",
-  "log_level": "info"
+  "log_level": "info",
+  "proxy": {
+    "upstream_url": "http://localhost:8787",
+    "port": "443"
+  }
 }

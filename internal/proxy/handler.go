@@ -1,11 +1,12 @@
-package core
+package proxy
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/proxy"
-	"github.com/spf13/viper"
+	"github.com/simplyzetax/aegis/internal/config"
 )
 
+// Handler processes incoming HTTP requests and proxies them to the upstream server
 func Handler(c *fiber.Ctx) error {
 	url := c.Request().URI()
 
@@ -18,13 +19,14 @@ func Handler(c *fiber.Ctx) error {
 		c.Request().Header.Set("X-Epic-URL", string(c.Request().Header.Peek("X-Epic-URL")))
 	}
 
-	c.Request().Header.Set("X-Telemachus-Identifier", Config.Identifier)
+	// Set the Telemachus identifier from configuration
+	c.Request().Header.Set("X-Telemachus-Identifier", config.Config.Identifier)
 
-	UpstreamURL := viper.GetString("upstream_url")
+	// Build upstream URL with path and query parameters
+	upstreamURL := config.Config.Proxy.UpstreamURL + string(url.Path()) + "?" + string(url.QueryString())
 
-	UpstreamURL = UpstreamURL + string(url.Path()) + "?" + string(url.QueryString())
-
-	if err := proxy.Do(c, UpstreamURL); err != nil {
+	// Proxy the request to the upstream server
+	if err := proxy.Do(c, upstreamURL); err != nil {
 		return err
 	}
 	return nil

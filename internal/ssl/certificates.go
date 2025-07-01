@@ -1,4 +1,4 @@
-package core
+package ssl
 
 import (
 	"crypto/ecdsa"
@@ -21,7 +21,7 @@ import (
 
 // GenerateCerts creates a self-signed SSL certificate and key compatible with Chrome.
 // It includes a Subject Alternative Name (SAN) which is required by modern browsers.
-// The certificate and key are saved to cert.pem and key.pem in the current directory.
+// The certificate and key are saved to cert.pem and key.pem in the appropriate directory.
 func GenerateCerts(host string) error {
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -102,6 +102,7 @@ func GenerateCerts(host string) error {
 	return nil
 }
 
+// LoadCert loads a certificate and key pair from the specified certificate name
 func LoadCert(name string) tls.Certificate {
 	certPath := filepath.Join("certs", name, "cert.pem")
 	keyPath := filepath.Join("certs", name, "key.pem")
@@ -112,6 +113,7 @@ func LoadCert(name string) tls.Certificate {
 	return cert
 }
 
+// ListCerts returns a list of available certificate names
 func ListCerts() ([]string, error) {
 	certDir := "certs"
 	files, err := os.ReadDir(certDir)
@@ -130,4 +132,57 @@ func ListCerts() ([]string, error) {
 	}
 
 	return certNames, nil
+}
+
+// ValidateCert checks if a certificate exists and is valid
+func ValidateCert(name string) error {
+	certPath := filepath.Join("certs", name, "cert.pem")
+	keyPath := filepath.Join("certs", name, "key.pem")
+
+	// Check if files exist
+	if _, err := os.Stat(certPath); os.IsNotExist(err) {
+		return fmt.Errorf("certificate file not found: %s", certPath)
+	}
+	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
+		return fmt.Errorf("key file not found: %s", keyPath)
+	}
+
+	// Try to load the certificate to validate it
+	_, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		return fmt.Errorf("invalid certificate or key: %v", err)
+	}
+
+	return nil
+}
+
+// GetCertInfo returns information about a certificate
+func GetCertInfo(name string) (map[string]interface{}, error) {
+	certPath := filepath.Join("certs", name, "cert.pem")
+
+	certPEM, err := os.ReadFile(certPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate: %v", err)
+	}
+
+	block, _ := pem.Decode(certPEM)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
+
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %v", err)
+	}
+
+	return map[string]interface{}{
+		"subject":      cert.Subject.String(),
+		"issuer":       cert.Issuer.String(),
+		"not_before":   cert.NotBefore,
+		"not_after":    cert.NotAfter,
+		"dns_names":    cert.DNSNames,
+		"ip_addresses": cert.IPAddresses,
+		"serial":       cert.SerialNumber.String(),
+		"is_ca":        cert.IsCA,
+	}, nil
 }
