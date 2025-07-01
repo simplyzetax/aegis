@@ -3,13 +3,24 @@ package main
 import (
 	"github.com/charmbracelet/log"
 	"github.com/gofiber/fiber/v2"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/simplyzetax/aegis/core"
 )
 
 func main() {
 
 	core.LoadConfig()
+
+	log.Debugf("Platform: %s", core.Platform)
+	log.Debugf("IsAdmin: %t", core.IsAdmin())
+	log.Debugf("CanEscalate: %t", core.CanEscalate())
+	log.Debugf("GetUserPrivilegeInfo: %s", core.GetUserPrivilegeInfo())
+
+	if !core.IsAdmin() {
+		log.Warn("Aegis needs to be run as admin to function properly")
+		if err := core.EscalatePrivileges(); err != nil {
+			log.Fatalf("failed to escalate privileges: %v", err)
+		}
+	}
 
 	_, err := core.ListCerts()
 	if err != nil {
@@ -31,13 +42,6 @@ func main() {
 		},
 		DisableStartupMessage: true,
 	})
-
-	id, err := gonanoid.New()
-	if err != nil {
-		log.Fatalf("failed to generate identifier: %v", err)
-	}
-
-	core.Identifier = id
 
 	app.All("*", core.Handler)
 

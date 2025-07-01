@@ -1,3 +1,5 @@
 {
-  "upstream_url": "http://localhost:8787"
+  "upstream_url": "http://localhost:8787",
+  "identifier": "dev",
+  "log_level": "debug"
 }
