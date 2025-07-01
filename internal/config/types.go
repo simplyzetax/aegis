@@ -18,23 +18,22 @@ type DNSConfig struct {
 
 // ProxyConfig holds proxy server configuration
 type ProxyConfig struct {
-	UpstreamURL string `json:"upstream_url" mapstructure:"upstream_url"`
-	Port        string `json:"port" mapstructure:"port"`
+	UpstreamURL string            `json:"upstream_url" mapstructure:"upstream_url"`
+	Port        string            `json:"port" mapstructure:"port"`
+	Headers     map[string]string `json:"headers" mapstructure:"headers"` // Custom headers to inject into requests
 }
 
 // AppConfig represents the complete application configuration
 type AppConfig struct {
-	Identifier string      `json:"identifier" mapstructure:"identifier"`
-	LogLevel   string      `json:"log_level" mapstructure:"log_level"`
-	DNS        DNSConfig   `json:"dns" mapstructure:"dns"`
-	Proxy      ProxyConfig `json:"proxy" mapstructure:"proxy"`
+	LogLevel string      `json:"log_level" mapstructure:"log_level"`
+	DNS      DNSConfig   `json:"dns" mapstructure:"dns"`
+	Proxy    ProxyConfig `json:"proxy" mapstructure:"proxy"`
 }
 
 // GetDefaultConfig returns a configuration with sensible defaults
 func GetDefaultConfig() *AppConfig {
 	return &AppConfig{
-		Identifier: "",
-		LogLevel:   "info",
+		LogLevel: "info",
 		DNS: DNSConfig{
 			Redirects: []DNSRedirect{
 				{
@@ -51,6 +50,9 @@ func GetDefaultConfig() *AppConfig {
 		Proxy: ProxyConfig{
 			UpstreamURL: "http://localhost:8787",
 			Port:        "443",
+			Headers: map[string]string{
+				"X-Telemachus-Identifier": "",
+			},
 		},
 	}
 }

@@ -15,7 +15,7 @@ Aegis is a local DNS server and HTTPS proxy designed to redirect game traffic to
 
 - **SSL Termination:** Handle HTTPS connections and forward to your HTTP(s) backend
 - **Certificate Management:** Generate and manage SSL certificates automatically
-- **Header Injection:** Add custom headers for backend compatibility
+- **Custom Headers:** Configure any headers to be injected into backend requests
 
 ### ⚙️ **Easy Configuration**
 
@@ -80,7 +80,12 @@ The `config.json` file controls all Aegis behavior:
   },
   "proxy": {
     "upstream_url": "http://localhost:8787",
-    "port": "443"
+    "port": "443",
+    "headers": {
+      "X-Telemachus-Identifier": "",
+      "X-Custom-Header": "custom-value",
+      "X-Game-Backend": "aegis-proxy"
+    }
   },
   "identifier": "dev",
   "log_level": "info"
@@ -94,11 +99,17 @@ The `config.json` file controls all Aegis behavior:
 - **enabled:** Toggle redirects on/off without deleting them
 - **description:** Human-readable description
 
+### Proxy Settings
+
+- **upstream_url:** Your backend HTTP server URL
+- **port:** HTTPS port to listen on (usually 443)
+- **headers:** Custom headers to inject into all requests to your backend
+  - Add any custom headers your backend needs
+
 ### Other Settings
 
 - **upstream_dns:** Where to forward non-redirected DNS queries
 - **auto_manage_system:** Automatically configure system DNS settings
-- **upstream_url:** Your backend HTTP server URL
 - **log_level:** `debug`, `info`, `warn`, or `error`
 
 ## How It Works

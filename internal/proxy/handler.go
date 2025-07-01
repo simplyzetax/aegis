@@ -19,8 +19,10 @@ func Handler(c *fiber.Ctx) error {
 		c.Request().Header.Set("X-Epic-URL", string(c.Request().Header.Peek("X-Epic-URL")))
 	}
 
-	// Set the Telemachus identifier from configuration
-	c.Request().Header.Set("X-Telemachus-Identifier", config.Config.Identifier)
+	// Set custom headers from configuration
+	for headerName, headerValue := range config.Config.Proxy.Headers {
+		c.Request().Header.Set(headerName, headerValue)
+	}
 
 	// Build upstream URL with path and query parameters
 	upstreamURL := config.Config.Proxy.UpstreamURL + string(url.Path()) + "?" + string(url.QueryString())

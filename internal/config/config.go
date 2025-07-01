@@ -51,7 +51,6 @@ func Load() error {
 // Save writes the current configuration to file
 func Save() error {
 	// Convert config to viper format
-	viper.Set("identifier", Config.Identifier)
 	viper.Set("log_level", Config.LogLevel)
 	viper.Set("dns", Config.DNS)
 	viper.Set("proxy", Config.Proxy)
@@ -101,9 +100,6 @@ func GetEnabledRedirects() []DNSRedirect {
 
 // validate checks if the configuration is valid
 func validate() error {
-	if Config.Identifier == "" {
-		return fmt.Errorf("identifier is required")
-	}
 
 	if Config.DNS.UpstreamDNS == "" {
 		Config.DNS.UpstreamDNS = "1.1.1.1:53"
