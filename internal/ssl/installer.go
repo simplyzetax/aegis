@@ -100,7 +100,7 @@ func (ci *CertInstaller) uninstallCertificateWindows(certName string) error {
 	log.Infof("Removing certificate %s from Windows certificate store...", certName)
 
 	// PowerShell script to remove certificate by subject name
-	psScript := fmt.Sprintf(`
+	psScript := `
 		$store = New-Object System.Security.Cryptography.X509Certificates.X509Store('Root', 'LocalMachine')
 		$store.Open('ReadWrite')
 		$certs = $store.Certificates | Where-Object {$_.Subject -like "*Aegis Development*"}
@@ -109,7 +109,7 @@ func (ci *CertInstaller) uninstallCertificateWindows(certName string) error {
 			Write-Host "Removed certificate: $($cert.Subject)"
 		}
 		$store.Close()
-	`)
+	`
 
 	cmd := exec.Command("powershell", "-ExecutionPolicy", "Bypass", "-Command", psScript)
 	output, err := cmd.CombinedOutput()
