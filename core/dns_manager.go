@@ -179,9 +179,29 @@ func (dm *DNSManager) getCurrentDNSMacOS() error {
 
 		// Skip if DNS is already set to localhost (indicates previous run didn't clean up)
 		if strings.Contains(dnsOutputStr, "127.0.0.1") && !strings.Contains(dnsOutputStr, "aren't any") {
-			log.Warnf("Service %s already has localhost DNS - previous run may not have restored properly", line)
-			log.Infof("To fix this, run: sudo networksetup -setdnsservers '%s' empty", line)
-			continue
+			log.Warnf("Service %s already has localhost DNS - automatically resetting to fix previous run", line)
+
+			// Automatically reset this service to empty/automatic
+			resetCmd := exec.Command("sudo", "networksetup", "-setdnsservers", line, "empty")
+			if err := resetCmd.Run(); err != nil {
+				log.Warnf("Failed to automatically reset DNS for service %s: %v", line, err)
+				log.Infof("To fix manually, run: sudo networksetup -setdnsservers '%s' empty", line)
+				continue
+			} else {
+				log.Infof("Successfully reset %s to automatic DNS", line)
+
+				// Now re-query the DNS settings for this service
+				cmd := exec.Command("networksetup", "-getdnsservers", line)
+				newDnsOutput, err := cmd.Output()
+				if err != nil {
+					log.Debugf("Failed to re-query DNS for service %s after reset: %v", line, err)
+					continue
+				}
+
+				// Update dnsOutputStr with the new output
+				dnsOutputStr = strings.TrimSpace(string(newDnsOutput))
+				log.Debugf("DNS output for %s after reset: %s", line, dnsOutputStr)
+			}
 		}
 
 		// Check if using DHCP DNS
@@ -288,8 +308,8 @@ func (dm *DNSManager) setDNSMacOS(dnsServer string) error {
 			continue
 		}
 
-		log.Debugf("Setting DNS for active service: %s", serviceName)
-		cmd := exec.Command("networksetup", "-setdnsservers", serviceName, dnsServer)
+		log.Debugf("Setting DNS for active service: %s using: sudo networksetup -setdnsservers '%s' %s", serviceName, serviceName, dnsServer)
+		cmd := exec.Command("sudo", "networksetup", "-setdnsservers", serviceName, dnsServer)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Warnf("Failed to set DNS for service %s: %v (output: %s)", serviceName, err, string(output))
@@ -351,23 +371,23 @@ func (dm *DNSManager) restoreDNSMacOS() error {
 		}
 
 		if len(dnsServers) == 0 {
-			// Set to automatic (DHCP)
-			log.Debugf("Restoring %s to DHCP DNS", serviceName)
-			cmd := exec.Command("networksetup", "-setdnsservers", serviceName, "empty")
+			// Service was originally using DHCP, reset to empty/automatic
+			log.Debugf("Restoring %s to automatic DNS using: sudo networksetup -setdnsservers '%s' empty", serviceName, serviceName)
+			cmd := exec.Command("sudo", "networksetup", "-setdnsservers", serviceName, "empty")
 			if err := cmd.Run(); err != nil {
-				log.Warnf("Failed to restore DNS for service %s to DHCP: %v", serviceName, err)
+				log.Warnf("Failed to restore DNS for service %s to automatic: %v", serviceName, err)
 			} else {
-				log.Debugf("Restored %s to DHCP DNS", serviceName)
+				log.Debugf("Successfully restored %s to automatic DNS", serviceName)
 			}
 		} else {
-			// Set all DNS servers
-			log.Debugf("Restoring %s to DNS servers: %v", serviceName, dnsServers)
-			args := append([]string{"-setdnsservers", serviceName}, dnsServers...)
-			cmd := exec.Command("networksetup", args...)
+			// Service had specific DNS servers, restore them
+			log.Debugf("Restoring %s to specific DNS servers: %v", serviceName, dnsServers)
+			args := append([]string{"networksetup", "-setdnsservers", serviceName}, dnsServers...)
+			cmd := exec.Command("sudo", args...)
 			if err := cmd.Run(); err != nil {
-				log.Warnf("Failed to restore DNS for service %s: %v", serviceName, err)
+				log.Warnf("Failed to restore DNS servers for service %s: %v", serviceName, err)
 			} else {
-				log.Debugf("Restored %s to DNS servers: %v", serviceName, dnsServers)
+				log.Debugf("Successfully restored %s to DNS servers: %v", serviceName, dnsServers)
 			}
 		}
 	}
@@ -413,8 +433,8 @@ func (dm *DNSManager) ResetAllDNSToAuto() error {
 			continue
 		}
 
-		log.Debugf("Resetting %s to automatic DNS", line)
-		cmd := exec.Command("networksetup", "-setdnsservers", line, "empty")
+		log.Debugf("Resetting %s to automatic DNS using: sudo networksetup -setdnsservers '%s' empty", line, line)
+		cmd := exec.Command("sudo", "networksetup", "-setdnsservers", line, "empty")
 		if err := cmd.Run(); err != nil {
 			log.Warnf("Failed to reset DNS for service %s: %v", line, err)
 		} else {

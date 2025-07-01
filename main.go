@@ -29,30 +29,12 @@ func main() {
 		log.Warnf("Failed to get current DNS settings: %v", err)
 		log.Info("Continuing without DNS management...")
 	} else {
-		// Check if we found any manageable interfaces
-		if len(dnsManager.GetOriginalDNS()) == 0 {
-			log.Warn("No manageable network interfaces found - this might be due to previous DNS not being restored")
-			log.Info("Attempting to reset all DNS settings to automatic...")
-
-			if err := dnsManager.ResetAllDNSToAuto(); err != nil {
-				log.Warnf("Failed to reset DNS automatically: %v", err)
-				log.Info("You may need to manually reset DNS with: sudo networksetup -setdnsservers 'Wi-Fi' empty")
-			} else {
-				log.Info("DNS reset successful, retrying DNS detection...")
-				// Retry getting DNS settings after reset
-				if err := dnsManager.GetCurrentDNS(); err != nil {
-					log.Warnf("Still failed to get DNS settings after reset: %v", err)
-				} else {
-					log.Infof("Found %d manageable network services after reset", len(dnsManager.GetOriginalDNS()))
-				}
-			}
-		}
-
 		if len(dnsManager.GetOriginalDNS()) > 0 {
 			log.Info("Current DNS settings saved")
 			// Set up signal handlers for graceful cleanup
 			dnsManager.SetupSignalHandlers()
 		} else {
+			log.Info("No manageable network interfaces found")
 			log.Info("Continuing without DNS management...")
 		}
 	}
