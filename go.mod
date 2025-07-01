@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/charmbracelet/log v0.4.2
 	github.com/gofiber/fiber/v2 v2.52.8
-	github.com/matoous/go-nanoid/v2 v2.1.0
+	github.com/miekg/dns v1.1.66
 	github.com/spf13/viper v1.20.1
 )
 
@@ -35,7 +35,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
-	github.com/miekg/dns v1.1.66 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
