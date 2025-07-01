@@ -67,23 +67,18 @@ func main() {
 	// Track whether we modified system DNS settings
 	modifiedDNS := false
 
-	// Only configure system DNS if we're not running on the standard port 53
-	if dnsPort == ":53" {
-		log.Info("DNS server is running on standard port 53 - no system DNS configuration needed")
-	} else {
-		// Configure system DNS to use our server (if we have original settings)
-		if len(dnsManager.GetOriginalDNS()) > 0 {
-			log.Infof("Configuring system DNS to use local DNS server on port %s...", dnsPort)
-			if err := dnsManager.SetDNSToLocal(dnsPort); err != nil {
-				log.Warnf("Failed to configure system DNS: %v", err)
-				log.Infof("You may need to manually configure DNS to use 127.0.0.1 (server running on port %s)", dnsPort)
-			} else {
-				log.Info("System DNS configured successfully")
-				modifiedDNS = true
-			}
+	// Configure system DNS to use our server (if we have original settings)
+	if len(dnsManager.GetOriginalDNS()) > 0 {
+		log.Info("Configuring system DNS to use local DNS server...")
+		if err := dnsManager.SetDNSToLocal(dnsPort); err != nil {
+			log.Warnf("Failed to configure system DNS: %v", err)
+			log.Infof("You may need to manually configure DNS to use 127.0.0.1")
 		} else {
-			log.Infof("DNS management unavailable - manually configure DNS to use 127.0.0.1 (server running on port %s)", dnsPort)
+			log.Info("System DNS configured successfully")
+			modifiedDNS = true
 		}
+	} else {
+		log.Info("DNS management unavailable - manually configure DNS to use 127.0.0.1")
 	}
 
 	// Test DNS functionality

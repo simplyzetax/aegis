@@ -37,7 +37,10 @@ func (d *DNSServer) handleDNSRequest(w dns.ResponseWriter, r *dns.Msg) {
 
 	// Process each question in the request
 	for _, q := range r.Question {
-		log.Debugf("DNS Query: %s %s", q.Name, dns.TypeToString[q.Qtype])
+		//only log if query contains epicgames.com
+		if strings.Contains(q.Name, "epicgames.com") {
+			log.Debugf("DNS Query: %s %s", q.Name, dns.TypeToString[q.Qtype])
+		}
 
 		// Check if this is a query for *.ol.epicgames.com
 		if strings.HasSuffix(strings.ToLower(q.Name), ".ol.epicgames.com.") {
@@ -131,7 +134,9 @@ func (d *DNSServer) forwardToCloudflare(m *dns.Msg, originalReq *dns.Msg, w dns.
 
 	// log the forwarded query
 	for _, q := range originalReq.Question {
-		log.Debugf("Forwarded to Cloudflare: %s %s", q.Name, dns.TypeToString[q.Qtype])
+		if strings.Contains(q.Name, "epicgames.com") {
+			log.Debugf("Forwarded to Cloudflare: %s %s", q.Name, dns.TypeToString[q.Qtype])
+		}
 	}
 }
 
