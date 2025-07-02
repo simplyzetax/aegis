@@ -48,7 +48,7 @@ func GenerateCerts(host string) error {
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
-		IsCA:                  true,
+		IsCA:                  false,
 	}
 
 	if ip := net.ParseIP(host); ip != nil {

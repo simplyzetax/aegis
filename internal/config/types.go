@@ -23,11 +23,18 @@ type ProxyConfig struct {
 	Headers     map[string]string `json:"headers" mapstructure:"headers"` // Custom headers to inject into requests
 }
 
+// SimpleModeConfig holds simple mode configuration
+type SimpleModeConfig struct {
+	Enabled bool   `json:"enabled" mapstructure:"enabled"`
+	Domain  string `json:"domain" mapstructure:"domain"` // Domain for the certificate (e.g., "localhost", "*.example.com")
+}
+
 // AppConfig represents the complete application configuration
 type AppConfig struct {
-	LogLevel string      `json:"log_level" mapstructure:"log_level"`
-	DNS      DNSConfig   `json:"dns" mapstructure:"dns"`
-	Proxy    ProxyConfig `json:"proxy" mapstructure:"proxy"`
+	LogLevel   string           `json:"log_level" mapstructure:"log_level"`
+	DNS        DNSConfig        `json:"dns" mapstructure:"dns"`
+	Proxy      ProxyConfig      `json:"proxy" mapstructure:"proxy"`
+	SimpleMode SimpleModeConfig `json:"simple_mode" mapstructure:"simple_mode"`
 }
 
 // GetDefaultConfig returns a configuration with sensible defaults
@@ -53,6 +60,10 @@ func GetDefaultConfig() *AppConfig {
 			Headers: map[string]string{
 				"X-Telemachus-Identifier": "",
 			},
+		},
+		SimpleMode: SimpleModeConfig{
+			Enabled: true,
+			Domain:  "*.ol.epicgames.com",
 		},
 	}
 }

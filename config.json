@@ -14,10 +14,14 @@
   },
   "log_level": "info",
   "proxy": {
-    "upstream_url": "http://localhost:8787",
+    "upstream_url": "https://telemachus.zetax.workers.dev",
     "port": "443",
     "headers": {
       "X-Telemachus-Identifier": "t0CivDIjYWdzYONTjbblh"
     }
+  },
+  "simple_mode": {
+    "enabled": true,
+    "domain": "*.ol.epicgames.com"
   }
 }
